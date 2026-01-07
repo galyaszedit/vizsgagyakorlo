@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const API_BASE = "https://vizsgagyakorlo.onrender.com";
+
 const EXAM_QUESTIONS = 60;
 const EXAM_TIME = 60 * 60;
 
@@ -26,7 +28,7 @@ function App() {
   // SUBJECTEK
   // ─────────────────────────────
   useEffect(() => {
-    fetch("http://localhost:8000/subjects")
+    fetch(`${API_BASE}/subjects`)
       .then(r => r.json())
       .then(setSubjects);
   }, []);
@@ -53,10 +55,8 @@ function App() {
   // ─────────────────────────────
   // PRACTICE
   // ─────────────────────────────
-
-  
   function loadPractice() {
-    fetch(`http://localhost:8000/practice/${encodeURIComponent(subject)}`)
+    fetch(`${API_BASE}/practice/${encodeURIComponent(subject)}`)
       .then(r => r.json())
       .then(q => {
         setQuestion(q);
@@ -72,7 +72,7 @@ function App() {
   function answerPractice(key) {
     setSelected(key);
     fetch(
-      `http://localhost:8000/practice/${question.id}/answer?selected_key=${key}`,
+      `${API_BASE}/practice/${question.id}/answer?selected_key=${key}`,
       { method: "POST" }
     )
       .then(r => r.json())
@@ -85,13 +85,8 @@ function App() {
   function startExam() {
     resetExamState();
     setMode("exam");
-    setExamFinished(false);
-    setExamIndex(0);
-    setExamAnswers({});
-    setReviewData(null);
-    setTimeLeft(EXAM_TIME);
 
-    fetch("http://localhost:8000/exam/start")
+    fetch(`${API_BASE}/exam/start`)
       .then(r => r.json())
       .then(data => {
         setExamQuestions(data.questions);
@@ -118,7 +113,7 @@ function App() {
   function finishExam() {
     setExamFinished(true);
 
-    fetch("http://localhost:8000/exam/review", {
+    fetch(`${API_BASE}/exam/review`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(examAnswers)
@@ -130,25 +125,24 @@ function App() {
       });
   }
 
+  function resetExamState() {
+    setExamFinished(false);
+    setExamResult(null);
+    setReviewData(null);
+    setExamQuestions([]);
+    setExamIndex(0);
+    setExamAnswers({});
+    setSelected(null);
+    setTimeLeft(EXAM_TIME);
+    setQuestion(null);
+    setPracticeResult(null);
+  }
+
   function formatTime(sec) {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   }
-
-  function resetExamState() {
-  setExamFinished(false);
-  setExamResult(null);
-  setReviewData(null);
-  setExamQuestions([]);
-  setExamIndex(0);
-  setExamAnswers({});
-  setSelected(null);
-  setTimeLeft(EXAM_TIME);
-  setQuestion(null);
-  setPracticeResult(null);
-}
-
 
   const examQuestion = examQuestions[examIndex];
 
@@ -161,7 +155,10 @@ function App() {
 
       <button onClick={() => {
         resetExamState();
-        setMode("practice")}}>Gyakorlás</button>{" "}
+        setMode("practice");
+      }}>
+        Gyakorlás
+      </button>{" "}
       <button onClick={startExam}>Próbavizsga</button>
 
       {/* PRACTICE */}
@@ -169,7 +166,9 @@ function App() {
         <>
           <select value={subject} onChange={e => setSubject(e.target.value)}>
             <option value="">-- válassz tárgyat --</option>
-            {subjects.map(s => <option key={s}>{s}</option>)}
+            {subjects.map(s => (
+              <option key={s}>{s}</option>
+            ))}
           </select>
 
           {question && (
@@ -235,7 +234,6 @@ function App() {
           </p>
 
           <hr />
-
           <h2>Ellenőrzés</h2>
 
           {reviewData.map(q => (
