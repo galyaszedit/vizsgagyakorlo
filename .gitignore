@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+backend/__pycache__/
+backend/app/data/questions.json
+node_modules/
+dist/
+.env
