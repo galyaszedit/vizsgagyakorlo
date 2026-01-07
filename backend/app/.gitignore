@@ -1,0 +1,4 @@
+questions.json
+*.db
+__pycache__/
+.env
