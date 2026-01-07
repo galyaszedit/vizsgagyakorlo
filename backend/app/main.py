@@ -1,5 +1,8 @@
 import json
 import random
+import os
+import requests
+
 from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
 from pathlib import Path
@@ -19,21 +22,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BASE_DIR = Path(__file__).resolve().parent
-SECRET_PATH = Path("/etc/secrets/questions.json")
-LOCAL_PATH = BASE_DIR / "data" / "questions.json"
+QUESTIONS_URL = os.getenv("QUESTIONS_URL")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
-QUESTIONS_FILE = SECRET_PATH if SECRET_PATH.exists() else LOCAL_PATH
+if not QUESTIONS_URL:
+    raise RuntimeError("QUESTIONS_URL nincs beállítva")
 
-# ─────────────────────────────────────────────
-# ADATBETÖLTÉS
-# ─────────────────────────────────────────────
+headers = {}
+if GITHUB_TOKEN:
+    headers["Authorization"] = f"token {GITHUB_TOKEN}"
+
 try:
-    with open(QUESTIONS_FILE, encoding="utf-8") as f:
-        QUESTIONS = json.load(f)
-    
-except FileNotFoundError:
-    raise RuntimeError(f"Hiányzik a kérdésfájl: {QUESTIONS_FILE}")
+    resp = requests.get(QUESTIONS_URL, headers=headers, timeout=10)
+    resp.raise_for_status()
+    QUESTIONS = resp.json()
+except Exception as e:
+    raise RuntimeError(f"Nem sikerült letölteni a questions.json-t: {e}")
+
 
 
 if not isinstance(QUESTIONS, list) or not QUESTIONS:
