@@ -71,6 +71,13 @@ def correct_key(question: dict) -> str:
 # ─────────────────────────────────────────────
 # ENDPOINTOK
 # ─────────────────────────────────────────────
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+@app.head("/health")
+def health_head():
+    return
 
 @app.get("/")
 def root():
